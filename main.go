@@ -5,7 +5,10 @@ import (
 	"log"
 	"time"
 
+	"os"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,8 +22,8 @@ type MongoInstance struct {
 
 var mg MongoInstance
 
-const dbName = "fiber-hrms"
-const mongoURI = "mongodb://localhost:27017/" + dbName
+var mongoURI string
+var dbName = "fiber-hrms"
 
 type Employee struct {
 	ID     string  `json:"id,omitempty" bson:"_id,omitempty"`
@@ -50,9 +53,18 @@ func Connect() error {
 
 func main() {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	mongoURI = os.Getenv("MONGODB_URI")
+
+	// main logic for getting the database connection to Mongo instance server  and getting the database  connection
+
 	if err := Connect(); err != nil {
 		log.Fatal(err)
 	}
+
 	app := fiber.New()
 
 	app.Get("/employee", func(c *fiber.Ctx) error {
@@ -79,6 +91,7 @@ func main() {
 		employee := new(Employee)
 
 		if err := c.BodyParser(employee); err != nil {
+
 			return c.Status(400).SendString(err.Error())
 		}
 
@@ -164,5 +177,5 @@ func main() {
 
 	})
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":8080"))
 }
